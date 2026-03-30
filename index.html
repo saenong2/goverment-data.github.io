@@ -4,114 +4,212 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>정부 유튜브 구독자 비교</title>
+
+  <!-- Pretendard -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+
+  <!-- Noto Sans KR -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+
   <style>
+    :root {
+      --bg: #f5f6f8;
+      --card-bg: #ffffff;
+      --text: #111111;
+      --subtext: #6b7280;
+      --line: #e5e7eb;
+      --shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f7f7f7;
+      margin: 0;
+      padding: 24px 16px 40px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Pretendard", Arial, sans-serif;
+    }
+
+    .wrap {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
     }
 
     #status {
-      margin: 12px 0;
-      padding: 10px;
-      background: #f4f4f4;
-      border-radius: 8px;
-    }
-
-    #error {
-      margin: 12px 0;
-      padding: 10px;
-      background: #ffeaea;
-      color: #b00020;
-      border-radius: 8px;
-      white-space: pre-wrap;
+      margin: 0 0 8px;
+      padding: 10px 12px;
+      background: #f0f2f5;
+      border-radius: 10px;
+      font-size: 14px;
+      color: #374151;
     }
 
     #updated {
+      margin: 0 0 14px;
+      font-size: 13px;
+      color: var(--subtext);
+    }
+
+    #error {
+      margin: 0 0 14px;
+      padding: 10px 12px;
+      background: #ffeaea;
+      color: #b00020;
+      border-radius: 10px;
+      white-space: pre-wrap;
       font-size: 14px;
-      color: #666;
-      margin-bottom: 12px;
     }
 
     .channel-list {
       display: flex;
       flex-direction: column;
-      gap: 14px;
-      max-width: 700px;
+      gap: 12px;
     }
 
     .channel-card {
       display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 18px 20px;
-      background: white;
+      gap: 14px;
+      padding: 16px 18px;
+      background: var(--card-bg);
       border-radius: 18px;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      box-shadow: var(--shadow);
       text-decoration: none;
       color: inherit;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .channel-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
     }
 
     .rank {
-      width: 36px;
-      font-size: 28px;
-      font-weight: 800;
-      color: #111;
-      text-align: center;
+      width: 34px;
       flex-shrink: 0;
+      text-align: center;
+      font-family: "Noto Sans KR", sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: #111827;
+      letter-spacing: -0.03em;
     }
 
     .channel-logo {
-      width: 64px;
-      height: 64px;
+      width: 58px;
+      height: 58px;
       border-radius: 50%;
       object-fit: cover;
-      background: #eee;
+      background: #eeeeee;
       flex-shrink: 0;
+      border: 1px solid var(--line);
     }
 
     .channel-info {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
       flex: 1;
       min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
 
     .channel-top {
       display: flex;
-      align-items: center;
+      align-items: baseline;
+      justify-content: space-between;
       gap: 12px;
-      flex-wrap: wrap;
     }
 
     .channel-name {
-      font-size: 24px;
-      font-weight: 400;
-      line-height: 1.2;
+      font-size: 21px;
+      font-weight: 500;
+      line-height: 1.3;
+      letter-spacing: -0.02em;
+      word-break: keep-all;
     }
 
     .channel-subs {
-      font-size: 30px;
+      flex-shrink: 0;
+      font-family: "Noto Sans KR", sans-serif;
+      font-size: 29px;
       font-weight: 900;
-      color: #111;
-      line-height: 1.2;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      color: #111111;
     }
 
     .channel-handle {
-      font-size: 18px;
-      color: #666;
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--subtext);
+      letter-spacing: -0.01em;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 18px 12px 32px;
+      }
+
+      h2 {
+        font-size: 24px;
+      }
+
+      .channel-card {
+        padding: 14px 14px;
+        gap: 12px;
+      }
+
+      .rank {
+        width: 28px;
+        font-size: 20px;
+      }
+
+      .channel-logo {
+        width: 52px;
+        height: 52px;
+      }
+
+      .channel-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+
+      .channel-name {
+        font-size: 18px;
+      }
+
+      .channel-subs {
+        font-size: 25px;
+      }
+
+      .channel-handle {
+        font-size: 14px;
+      }
     }
   </style>
 </head>
 <body>
 
-  <h2>정부 유튜브 구독자 비교</h2>
-  <div id="status">불러오는 중...</div>
-  <div id="updated"></div>
-  <div id="error"></div>
-
-  <div id="result" class="channel-list"></div>
+  <div class="wrap">
+    <h2>정부 유튜브 구독자 비교</h2>
+    <div id="status">불러오는 중...</div>
+    <div id="updated"></div>
+    <div id="error"></div>
+    <div id="result" class="channel-list"></div>
+  </div>
 
   <script>
     const API_KEY = "AIzaSyBuHQuWnLHeOsIqq56avZQLhjsudm94w54";
