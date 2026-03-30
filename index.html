@@ -4,88 +4,134 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>정부 유튜브 구독자 비교</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    #status { margin: 12px 0; padding: 10px; background: #f4f4f4; border-radius: 8px; }
-    #error { margin: 12px 0; padding: 10px; background: #ffeaea; color: #b00020; border-radius: 8px; white-space: pre-wrap; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f7f7f7;
+    }
+
+    #status {
+      margin: 12px 0;
+      padding: 10px;
+      background: #f4f4f4;
+      border-radius: 8px;
+    }
+
+    #error {
+      margin: 12px 0;
+      padding: 10px;
+      background: #ffeaea;
+      color: #b00020;
+      border-radius: 8px;
+      white-space: pre-wrap;
+    }
+
+    .channel-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      max-width: 520px;
+    }
+
+    .channel-logo {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #eee;
+    }
+
+    .channel-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .channel-name {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .channel-handle {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .channel-subs {
+      font-size: 16px;
+      color: #111;
+    }
   </style>
 </head>
 <body>
 
-<h2>정부 유튜브 구독자 비교</h2>
-<div id="status">불러오는 중...</div>
-<div id="error"></div>
-<canvas id="chart" width="400" height="200"></canvas>
+  <h2>정부 유튜브 구독자 비교</h2>
+  <div id="status">불러오는 중...</div>
+  <div id="error"></div>
 
-<script>
-const API_KEY = "AIzaSyBuHQuWnLHeOsIqq56avZQLhjsudm94w54";
+  <div id="result"></div>
 
-const channels = [
-  { name: "농식품부", id: "UC014CTCdGJzeQfJtxnnMyjQ" },
-  { name: "환경부", id: "UCcyXjAdiepuKgmJO2C2fEmA" },
-  { name: "국토부", id: "UC0G0Z05LATPtpUkxeOrEjOA" }
-];
+  <script>
+    const API_KEY = "AIzaSyBuHQuWnLHeOsIqq56avZQLhjsudm94w54";
 
-async function getSubscribers(channelId) {
-  const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelId}&key=${API_KEY}`;
-  const res = await fetch(url);
-  const data = await res.json();
+    const channel = {
+      name: "농림축산식품부",
+      handle: "mafrakorea",
+      id: "UC014CTCdGJzeQfJtxnnMyjQ"
+    };
 
-  if (!res.ok) {
-    throw new Error("API 요청 실패\n" + JSON.stringify(data, null, 2));
-  }
-
-  if (!data.items || data.items.length === 0) {
-    throw new Error("채널 정보를 찾지 못했습니다.\n" + JSON.stringify(data, null, 2));
-  }
-
-  return parseInt(data.items[0].statistics.subscriberCount, 10);
-}
-
-async function loadData() {
-  const statusEl = document.getElementById("status");
-  const errorEl = document.getElementById("error");
-
-  try {
-    const labels = [];
-    const values = [];
-
-    for (const ch of channels) {
-      const subs = await getSubscribers(ch.id);
-      labels.push(ch.name);
-      values.push(subs);
+    function formatSubscribers(num) {
+      return Number(num).toLocaleString() + "명";
     }
 
-    statusEl.textContent = "불러오기 완료";
+    async function loadChannel() {
+      const statusEl = document.getElementById("status");
+      const errorEl = document.getElementById("error");
+      const resultEl = document.getElementById("result");
 
-    new Chart(document.getElementById("chart"), {
-      type: "bar",
-      data: {
-        labels,
-        datasets: [{
-          label: "구독자 수",
-          data: values
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true
-          }
+      try {
+        const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channel.id}&key=${API_KEY}`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error("API 요청 실패\n" + JSON.stringify(data, null, 2));
         }
-      }
-    });
-  } catch (err) {
-    statusEl.textContent = "불러오기 실패";
-    errorEl.textContent = err.message;
-    console.error(err);
-  }
-}
 
-loadData();
-</script>
+        if (!data.items || data.items.length === 0) {
+          throw new Error("채널 정보를 찾지 못했습니다.");
+        }
+
+        const item = data.items[0];
+        const thumbnail = item.snippet.thumbnails.default.url;
+        const subscriberCount = item.statistics.subscriberCount;
+
+        statusEl.textContent = "불러오기 완료";
+
+        resultEl.innerHTML = `
+          <a class="channel-card" href="https://www.youtube.com/@${channel.handle}" target="_blank" style="text-decoration:none; color:inherit;">
+            <img class="channel-logo" src="${thumbnail}" alt="${channel.name} 로고" />
+            <div class="channel-info">
+              <div class="channel-name">${channel.name}</div>
+              <div class="channel-handle">(@${channel.handle})</div>
+              <div class="channel-subs">${formatSubscribers(subscriberCount)}</div>
+            </div>
+          </a>
+        `;
+      } catch (err) {
+        statusEl.textContent = "불러오기 실패";
+        errorEl.textContent = err.message;
+        console.error(err);
+      }
+    }
+
+    loadChannel();
+  </script>
 
 </body>
 </html>
