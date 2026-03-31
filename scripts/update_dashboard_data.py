@@ -1,2 +1,161 @@
+import json
+import os
+from datetime import datetime, timezone
 
-print("hello")
+import requests
+
+API_KEY = os.environ["YOUTUBE_API_KEY"]
+BASE_URL = "https://www.googleapis.com/youtube/v3"
+
+with open("data/channels.json", "r", encoding="utf-8") as f:
+    CHANNELS = json.load(f)
+
+
+def get(url, params):
+    r = requests.get(url, params=params, timeout=30)
+    r.raise_for_status()
+    return r.json()
+
+
+def chunks(lst, size):
+    for i in range(0, len(lst), size):
+        yield lst[i:i + size]
+
+
+def iso_to_date(s):
+    try:
+        return datetime.fromisoformat(s.replace("Z", "+00:00"))
+    except Exception:
+        return None
+
+
+def fmt_video_url(video_id):
+    return f"https://www.youtube.com/watch?v={video_id}"
+
+
+dashboard = {
+    "updatedAt": datetime.now(timezone.utc).isoformat(),
+    "channels": [],
+    "videos": []
+}
+
+for ch in CHANNELS:
+    channel_id = ch["channelId"]
+
+    # 채널 기본 정보 + 구독자 수 + 업로드 목록 ID
+    channel_data = get(
+        f"{BASE_URL}/channels",
+        {
+            "part": "snippet,statistics,contentDetails",
+            "id": channel_id,
+            "key": API_KEY
+        }
+    )
+
+    items = channel_data.get("items", [])
+    if not items:
+        continue
+
+    item = items[0]
+    snippet = item.get("snippet", {})
+    stats = item.get("statistics", {})
+    uploads_playlist_id = item.get("contentDetails", {}).get("relatedPlaylists", {}).get("uploads")
+
+    dashboard["channels"].append({
+        "name": ch["name"],
+        "handle": ch["handle"],
+        "channelId": channel_id,
+        "channelUrl": f"https://www.youtube.com/@{ch['handle']}",
+        "thumbnail": snippet.get("thumbnails", {}).get("default", {}).get("url", ""),
+        "subscriberCount": int(stats.get("subscriberCount", 0)),
+        "videoCount": int(stats.get("videoCount", 0))
+    })
+
+    if not uploads_playlist_id:
+        continue
+
+    next_page_token = None
+    candidate_video_ids = []
+
+    while True:
+        playlist_data = get(
+            f"{BASE_URL}/playlistItems",
+            {
+                "part": "snippet,contentDetails",
+                "playlistId": uploads_playlist_id,
+                "maxResults": 50,
+                "pageToken": next_page_token,
+                "key": API_KEY
+            }
+        )
+
+        stop_early = False
+
+        for p_item in playlist_data.get("items", []):
+            p_snippet = p_item.get("snippet", {})
+            published_at = p_snippet.get("publishedAt")
+            dt = iso_to_date(published_at)
+            if not dt:
+                continue
+
+            # 최신순으로 내려오므로 2026보다 과거로 내려가면 종료
+            if dt.year < 2026:
+                stop_early = True
+                break
+
+            if dt.year == 2026:
+                video_id = p_item.get("contentDetails", {}).get("videoId")
+                if video_id:
+                    candidate_video_ids.append(video_id)
+
+        if stop_early:
+            break
+
+        next_page_token = playlist_data.get("nextPageToken")
+        if not next_page_token:
+            break
+
+    for video_id_batch in chunks(candidate_video_ids, 50):
+        videos_data = get(
+            f"{BASE_URL}/videos",
+            {
+                "part": "snippet,statistics",
+                "id": ",".join(video_id_batch),
+                "key": API_KEY
+            }
+        )
+
+        for v in videos_data.get("items", []):
+            v_snippet = v.get("snippet", {})
+            v_stats = v.get("statistics", {})
+
+            published_at = v_snippet.get("publishedAt")
+            dt = iso_to_date(published_at)
+            if not dt or dt.year != 2026:
+                continue
+
+            dashboard["videos"].append({
+                "channelName": ch["name"],
+                "handle": ch["handle"],
+                "channelId": channel_id,
+                "videoId": v["id"],
+                "videoUrl": fmt_video_url(v["id"]),
+                "title": v_snippet.get("title", ""),
+                "publishedAt": published_at,
+                "thumbnail": v_snippet.get("thumbnails", {}).get("medium", {}).get("url", "")
+                             or v_snippet.get("thumbnails", {}).get("default", {}).get("url", ""),
+                "viewCount": int(v_stats.get("viewCount", 0)),
+                "likeCount": int(v_stats.get("likeCount", 0)),
+                "commentCount": int(v_stats.get("commentCount", 0))
+            })
+
+dashboard["channels"].sort(key=lambda x: x["subscriberCount"], reverse=True)
+dashboard["videos"].sort(key=lambda x: x["publishedAt"], reverse=True)
+
+os.makedirs("data", exist_ok=True)
+with open("data/dashboard-data.json", "w", encoding="utf-8") as f:
+    json.dump(dashboard, f, ensure_ascii=False, indent=2)
+
+print("dashboard-data.json 업데이트 완료")
+print(f"channels: {len(dashboard['channels'])}")
+print(f"videos: {len(dashboard['videos'])}")
