@@ -1,1 +1,21 @@
-[]
+[
+  { "name": "농림축산식품부", "handle": "mafrakorea", "channelId": "UC014CTCdGJzeQfJtxnnMyjQ" },
+  { "name": "국토교통부", "handle": "korealand", "channelId": "UC0G0Z05LATPtpUkxeOrEjOA" },
+  { "name": "문화체육관광부", "handle": "문화체육관광부", "channelId": "UCXXA3M3rNQ1NTJZyUJOekPw" },
+  { "name": "보건복지부", "handle": "mohwpr", "channelId": "UCRsetXyMdNsR4M9KvA-a_fg" },
+  { "name": "국방부", "handle": "ROK_MND", "channelId": "UCoreZRRtVpu521wZNJWfUqQ" },
+  { "name": "고용노동부", "handle": "moelkorea", "channelId": "UC3XR-_4Rd1xf-5HnkJxc_bA" },
+  { "name": "기후부(환경부)", "handle": "mevpr", "channelId": "UCcyXjAdiepuKgmJO2C2fEmA" },
+  { "name": "법무부", "handle": "moj_korea", "channelId": "UCv98wlLoiNXta0k34cy0zvA" },
+  { "name": "통일부", "handle": "UNITVKOREA", "channelId": "UCkxOASipmR5wPoLbGUP4QPA" },
+  { "name": "행정안전부", "handle": "withyou3542", "channelId": "UCzteSXznVjwESizsCcSKSWw" },
+  { "name": "외교부", "handle": "MOFAKorea", "channelId": "UCwRFj9gC3meixU8fqKJdgxA" },
+  { "name": "국가보훈부", "handle": "mpvakorea", "channelId": "UClvT0GWxHHznabonSbWf7cg" },
+  { "name": "교육부", "handle": "ourmoetv", "channelId": "UCexUyFaq9YH7XJfCQzVR_jg" },
+  { "name": "중소기업벤처부", "handle": "bizinfo1357", "channelId": "UCaiBniKLomFVHcb5zt3lnfQ" },
+  { "name": "해양수산부", "handle": "해양수산부", "channelId": "UCgISSs3Odu2Wj_bhH-GHvnw" },
+  { "name": "산업통상자원부", "handle": "motiekorea", "channelId": "UCoNGys8NV8iInPK-AyTSgTA" },
+  { "name": "과학기술정보통신부", "handle": "withmsip", "channelId": "UCjeajitvt5U76154ynrVzAA" },
+  { "name": "재정경제부", "handle": "mosfkorea", "channelId": "UCnrPF6de3KuHZy3c2ZkqcMA" },
+  { "name": "성평등가족부", "handle": "mogefkorea", "channelId": "UCcgeHR34Rr17yaoaqD0jR2A" }
+]
