@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 import requests
 
@@ -9,6 +9,19 @@ BASE_URL = "https://www.googleapis.com/youtube/v3"
 
 with open("data/channels.json", "r", encoding="utf-8") as f:
     CHANNELS = json.load(f)
+
+existing_data = {
+    "updatedAt": "",
+    "channels": [],
+    "videos": []
+}
+
+if os.path.exists("data/dashboard-data.json"):
+    try:
+        with open("data/dashboard-data.json", "r", encoding="utf-8") as f:
+            existing_data = json.load(f)
+    except Exception:
+        pass
 
 
 def get(url, params):
@@ -33,16 +46,45 @@ def fmt_video_url(video_id):
     return f"https://www.youtube.com/watch?v={video_id}"
 
 
+def normalize_video(v):
+    return {
+        "channelName": v.get("channelName", ""),
+        "handle": v.get("handle", ""),
+        "channelId": v.get("channelId", ""),
+        "videoId": v.get("videoId", ""),
+        "videoUrl": v.get("videoUrl", ""),
+        "title": v.get("title", ""),
+        "publishedAt": v.get("publishedAt", ""),
+        "thumbnail": v.get("thumbnail", ""),
+        "viewCount": int(v.get("viewCount", 0)),
+        "likeCount": int(v.get("likeCount", 0)),
+        "commentCount": int(v.get("commentCount", 0))
+    }
+
+
+now = datetime.now(timezone.utc)
+recent_cutoff = now - timedelta(days=30)
+
+# 매주 일요일 전체 갱신
+# Python weekday(): 월=0, 화=1 ... 일=6
+is_full_refresh_day = now.astimezone(timezone.utc).weekday() == 6
+
+existing_video_map = {}
+for v in existing_data.get("videos", []):
+    if v.get("videoId"):
+        existing_video_map[v["videoId"]] = normalize_video(v)
+
 dashboard = {
     "updatedAt": datetime.now(timezone.utc).isoformat(),
     "channels": [],
     "videos": []
 }
 
+updated_video_map = {}
+
 for ch in CHANNELS:
     channel_id = ch["channelId"]
 
-    # 채널 기본 정보 + 구독자 수 + 업로드 목록 ID
     channel_data = get(
         f"{BASE_URL}/channels",
         {
@@ -98,15 +140,13 @@ for ch in CHANNELS:
             if not dt:
                 continue
 
-            # 최신순으로 내려오므로 2026보다 과거로 내려가면 종료
             if dt.year < 2026:
                 stop_early = True
                 break
 
-            if dt.year == 2026:
-                video_id = p_item.get("contentDetails", {}).get("videoId")
-                if video_id:
-                    candidate_video_ids.append(video_id)
+            video_id = p_item.get("contentDetails", {}).get("videoId")
+            if video_id:
+                candidate_video_ids.append(video_id)
 
         if stop_early:
             break
@@ -134,7 +174,7 @@ for ch in CHANNELS:
             if not dt or dt.year != 2026:
                 continue
 
-            dashboard["videos"].append({
+            video_obj = {
                 "channelName": ch["name"],
                 "handle": ch["handle"],
                 "channelId": channel_id,
@@ -147,10 +187,23 @@ for ch in CHANNELS:
                 "viewCount": int(v_stats.get("viewCount", 0)),
                 "likeCount": int(v_stats.get("likeCount", 0)),
                 "commentCount": int(v_stats.get("commentCount", 0))
-            })
+            }
+
+            # 주 1회 전체 갱신일이면 2026년 전체를 다시 갱신
+            if is_full_refresh_day:
+                updated_video_map[v["id"]] = video_obj
+            else:
+                # 평소에는 최근 30일만 갱신
+                if dt >= recent_cutoff:
+                    updated_video_map[v["id"]] = video_obj
+                else:
+                    if v["id"] in existing_video_map:
+                        updated_video_map[v["id"]] = existing_video_map[v["id"]]
+                    else:
+                        updated_video_map[v["id"]] = video_obj
 
 dashboard["channels"].sort(key=lambda x: x["subscriberCount"], reverse=True)
-dashboard["videos"].sort(key=lambda x: x["publishedAt"], reverse=True)
+dashboard["videos"] = sorted(updated_video_map.values(), key=lambda x: x["publishedAt"], reverse=True)
 
 os.makedirs("data", exist_ok=True)
 with open("data/dashboard-data.json", "w", encoding="utf-8") as f:
@@ -159,3 +212,4 @@ with open("data/dashboard-data.json", "w", encoding="utf-8") as f:
 print("dashboard-data.json 업데이트 완료")
 print(f"channels: {len(dashboard['channels'])}")
 print(f"videos: {len(dashboard['videos'])}")
+print(f"full refresh day: {is_full_refresh_day}")
