@@ -32,7 +32,7 @@
     }
 
     .wrap{
-      max-width:1200px;
+      max-width:1280px;
       margin:0 auto;
     }
 
@@ -200,7 +200,7 @@
     table{
       width:100%;
       border-collapse:collapse;
-      min-width:920px;
+      min-width:1180px;
     }
 
     thead th{
@@ -211,13 +211,13 @@
       font-size:13px;
       color:#4b5563;
       text-align:left;
-      padding:14px 12px;
+      padding:16px 14px;
       border-bottom:1px solid var(--line);
       white-space:nowrap;
     }
 
     tbody td{
-      padding:12px;
+      padding:14px;
       border-bottom:1px solid #f1f3f5;
       vertical-align:middle;
       font-size:14px;
@@ -227,21 +227,47 @@
       background:#fcfcfd;
     }
 
-    .mini-channel{
-      width:28px;
-      height:28px;
-      border-radius:50%;
+    .ministry-name{
+      min-width:120px;
+      font-size:14px;
+      font-weight:600;
+      line-height:1.4;
+      word-break:keep-all;
+    }
+
+    .date-cell{
+      min-width:95px;
+      font-family:"Noto Sans KR", sans-serif;
+      line-height:1.35;
+      color:#374151;
+    }
+
+    .thumb-cell{
+      width:180px;
+      min-width:180px;
+    }
+
+    .video-thumb-small{
+      width:160px;
+      height:90px;
       object-fit:cover;
+      border-radius:10px;
       display:block;
-      background:#eee;
+      background:#eeeeee;
       border:1px solid var(--line);
+    }
+
+    .title-cell{
+      min-width:420px;
     }
 
     .title-link{
       color:var(--text);
       text-decoration:none;
       font-weight:600;
-      line-height:1.45;
+      line-height:1.5;
+      display:block;
+      word-break:keep-all;
     }
 
     .title-link:hover{
@@ -251,6 +277,7 @@
     .num{
       font-family:"Noto Sans KR", sans-serif;
       white-space:nowrap;
+      min-width:70px;
     }
 
     .empty-box,
@@ -348,6 +375,7 @@
             <tr>
               <th>부처</th>
               <th>날짜</th>
+              <th>썸네일</th>
               <th>제목</th>
               <th>조회수</th>
               <th>좋아요</th>
@@ -477,7 +505,7 @@
       if (!filtered.length) {
         bodyEl.innerHTML = `
           <tr>
-            <td colspan="6">
+            <td colspan="7">
               <div class="empty-box" style="box-shadow:none; padding:6px 0;">조건에 맞는 영상이 없습니다.</div>
             </td>
           </tr>
@@ -487,11 +515,14 @@
 
       bodyEl.innerHTML = filtered.map(v => `
         <tr>
-          <td>
-            <img class="mini-channel" src="${v.channelThumbnail || ""}" alt="${v.channelName}">
+          <td class="ministry-name">${v.channelName}</td>
+          <td class="date-cell">${v.publishedAt.slice(0, 10)}</td>
+          <td class="thumb-cell">
+            <a href="${v.videoUrl}" target="_blank" rel="noopener noreferrer">
+              <img class="video-thumb-small" src="${v.thumbnail}" alt="${v.title}">
+            </a>
           </td>
-          <td>${v.publishedAt.slice(0, 10)}</td>
-          <td>
+          <td class="title-cell">
             <a class="title-link" href="${v.videoUrl}" target="_blank" rel="noopener noreferrer">${v.title}</a>
           </td>
           <td class="num">${formatNum(v.viewCount)}</td>
