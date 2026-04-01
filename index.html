@@ -21,9 +21,7 @@
       --blue:#2563eb;
     }
 
-    *{
-      box-sizing:border-box;
-    }
+    *{ box-sizing:border-box; }
 
     body{
       margin:0;
@@ -34,7 +32,7 @@
     }
 
     .wrap{
-      max-width:1100px;
+      max-width:1200px;
       margin:0 auto;
     }
 
@@ -187,62 +185,72 @@
       color:var(--text);
     }
 
-    .video-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));
-      gap:14px;
-    }
-
-    .video-card{
-      background:var(--card);
+    .table-wrap{
+      background:#fff;
       border-radius:18px;
       box-shadow:var(--shadow);
       overflow:hidden;
     }
 
-    .video-thumb-link{
-      display:block;
+    .table-scroll{
+      width:100%;
+      overflow-x:auto;
     }
 
-    .video-thumb{
+    table{
       width:100%;
-      aspect-ratio:16/9;
+      border-collapse:collapse;
+      min-width:920px;
+    }
+
+    thead th{
+      position:sticky;
+      top:0;
+      background:#fafafa;
+      z-index:1;
+      font-size:13px;
+      color:#4b5563;
+      text-align:left;
+      padding:14px 12px;
+      border-bottom:1px solid var(--line);
+      white-space:nowrap;
+    }
+
+    tbody td{
+      padding:12px;
+      border-bottom:1px solid #f1f3f5;
+      vertical-align:middle;
+      font-size:14px;
+    }
+
+    tbody tr:hover{
+      background:#fcfcfd;
+    }
+
+    .mini-channel{
+      width:28px;
+      height:28px;
+      border-radius:50%;
       object-fit:cover;
       display:block;
-      background:#eeeeee;
+      background:#eee;
+      border:1px solid var(--line);
     }
 
-    .video-body{
-      padding:14px;
-    }
-
-    .video-title{
-      display:block;
-      text-decoration:none;
+    .title-link{
       color:var(--text);
-      font-size:16px;
+      text-decoration:none;
       font-weight:600;
       line-height:1.45;
-      margin-bottom:8px;
     }
 
-    .video-title:hover{
+    .title-link:hover{
       color:var(--blue);
     }
 
-    .video-meta{
-      font-size:13px;
-      color:var(--sub);
-      margin-bottom:8px;
-    }
-
-    .video-stats{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-      font-size:13px;
-      color:#374151;
+    .num{
       font-family:"Noto Sans KR", sans-serif;
+      white-space:nowrap;
     }
 
     .empty-box,
@@ -333,7 +341,23 @@
       <input type="number" id="minComments" placeholder="최소 댓글" min="0" />
     </div>
 
-    <div id="videoGrid" class="video-grid"></div>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>부처</th>
+              <th>날짜</th>
+              <th>제목</th>
+              <th>조회수</th>
+              <th>좋아요</th>
+              <th>댓글</th>
+            </tr>
+          </thead>
+          <tbody id="videoTableBody"></tbody>
+        </table>
+      </div>
+    </div>
 
     <div id="errorBox" style="display:none;"></div>
   </div>
@@ -418,7 +442,7 @@
     }
 
     function renderVideos() {
-      const gridEl = document.getElementById("videoGrid");
+      const bodyEl = document.getElementById("videoTableBody");
       const ministry = document.getElementById("ministryFilter").value;
       const startDate = document.getElementById("startDate").value;
       const endDate = document.getElementById("endDate").value;
@@ -451,25 +475,29 @@
       }
 
       if (!filtered.length) {
-        gridEl.innerHTML = `<div class="empty-box">조건에 맞는 영상이 없습니다.</div>`;
+        bodyEl.innerHTML = `
+          <tr>
+            <td colspan="6">
+              <div class="empty-box" style="box-shadow:none; padding:6px 0;">조건에 맞는 영상이 없습니다.</div>
+            </td>
+          </tr>
+        `;
         return;
       }
 
-      gridEl.innerHTML = filtered.map(v => `
-        <div class="video-card">
-          <a class="video-thumb-link" href="${v.videoUrl}" target="_blank" rel="noopener noreferrer">
-            <img class="video-thumb" src="${v.thumbnail}" alt="${v.title}">
-          </a>
-          <div class="video-body">
-            <a class="video-title" href="${v.videoUrl}" target="_blank" rel="noopener noreferrer">${v.title}</a>
-            <div class="video-meta">${v.channelName} · ${v.publishedAt.slice(0, 10)}</div>
-            <div class="video-stats">
-              <span>조회수 ${formatNum(v.viewCount)}</span>
-              <span>좋아요 ${formatNum(v.likeCount)}</span>
-              <span>댓글 ${formatNum(v.commentCount)}</span>
-            </div>
-          </div>
-        </div>
+      bodyEl.innerHTML = filtered.map(v => `
+        <tr>
+          <td>
+            <img class="mini-channel" src="${v.channelThumbnail || ""}" alt="${v.channelName}">
+          </td>
+          <td>${v.publishedAt.slice(0, 10)}</td>
+          <td>
+            <a class="title-link" href="${v.videoUrl}" target="_blank" rel="noopener noreferrer">${v.title}</a>
+          </td>
+          <td class="num">${formatNum(v.viewCount)}</td>
+          <td class="num">${formatNum(v.likeCount)}</td>
+          <td class="num">${formatNum(v.commentCount)}</td>
+        </tr>
       `).join("");
     }
 
