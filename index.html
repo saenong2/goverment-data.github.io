@@ -10,6 +10,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
 
+  <!-- 엑셀 다운로드용 -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <style>
     :root{
       --bg:#f5f6f8;
@@ -19,6 +22,7 @@
       --line:#e5e7eb;
       --shadow:0 6px 18px rgba(0,0,0,.06);
       --blue:#2563eb;
+      --dark:#111827;
     }
 
     *{ box-sizing:border-box; }
@@ -185,6 +189,24 @@
       color:var(--text);
     }
 
+    .toolbar-btn{
+      appearance:none;
+      border:none;
+      background:var(--dark);
+      color:#fff;
+      padding:0 16px;
+      height:42px;
+      border-radius:12px;
+      font:inherit;
+      font-weight:600;
+      cursor:pointer;
+      box-shadow:var(--shadow);
+    }
+
+    .toolbar-btn:hover{
+      opacity:.92;
+    }
+
     .table-wrap{
       background:#fff;
       border-radius:18px;
@@ -298,6 +320,8 @@
       display:flex;
       justify-content:center;
       margin-top:16px;
+      gap:10px;
+      flex-wrap:wrap;
     }
 
     .load-more-btn{
@@ -370,6 +394,17 @@
       .channel-subs{
         font-size:25px;
       }
+
+      .toolbar{
+        flex-direction:column;
+        align-items:stretch;
+      }
+
+      .toolbar select,
+      .toolbar input,
+      .toolbar-btn{
+        width:100%;
+      }
     }
   </style>
 </head>
@@ -401,6 +436,8 @@
       <input type="number" id="minViews" placeholder="최소 조회수" min="0" />
       <input type="number" id="minLikes" placeholder="최소 좋아요" min="0" />
       <input type="number" id="minComments" placeholder="최소 댓글" min="0" />
+
+      <button id="downloadExcelBtn" class="toolbar-btn" type="button">엑셀 다운로드</button>
     </div>
 
     <div id="resultCount" class="result-count"></div>
@@ -612,6 +649,43 @@
       renderVideos();
     }
 
+    function getSortLabel(sortValue) {
+      if (sortValue === "views") return "조회수순";
+      if (sortValue === "likes") return "좋아요순";
+      if (sortValue === "comments") return "댓글순";
+      return "최신순";
+    }
+
+    function downloadExcel() {
+      if (!currentFilteredVideos.length) {
+        alert("다운로드할 데이터가 없습니다.");
+        return;
+      }
+
+      const startDate = document.getElementById("startDate").value || "시작일없음";
+      const endDate = document.getElementById("endDate").value || "종료일없음";
+      const ministry = document.getElementById("ministryFilter").value || "전체부처";
+      const sortLabel = getSortLabel(document.getElementById("sortFilter").value);
+
+      const rows = currentFilteredVideos.map((v, index) => ({
+        순번: index + 1,
+        부처: v.channelName,
+        날짜: v.publishedAt.slice(0, 10),
+        제목: v.title,
+        영상링크: v.videoUrl,
+        조회수: Number(v.viewCount || 0),
+        좋아요: Number(v.likeCount || 0),
+        댓글: Number(v.commentCount || 0)
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "콘텐츠목록");
+
+      const fileName = `정부유튜브_${ministry}_${startDate}_${endDate}_${sortLabel}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+    }
+
     async function init() {
       try {
         const res = await fetch("data/dashboard-data.json");
@@ -640,6 +714,7 @@
         document.getElementById("minLikes").addEventListener("input", resetAndRenderVideos);
         document.getElementById("minComments").addEventListener("input", resetAndRenderVideos);
         document.getElementById("loadMoreBtn").addEventListener("click", loadMoreVideos);
+        document.getElementById("downloadExcelBtn").addEventListener("click", downloadExcel);
 
       } catch (err) {
         const errorBox = document.getElementById("errorBox");
