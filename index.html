@@ -65,6 +65,28 @@
       letter-spacing:-0.02em;
     }
 
+    .section-head{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+      flex-wrap:wrap;
+    }
+
+    .section-title{
+      margin:0;
+      font-size:24px;
+      font-weight:700;
+      letter-spacing:-0.02em;
+    }
+
+    .section-period{
+      font-size:14px;
+      color:var(--sub);
+      font-family:"Noto Sans KR", sans-serif;
+    }
+
     .summary-grid{
       display:grid;
       grid-template-columns:repeat(4, minmax(0, 1fr));
@@ -206,6 +228,97 @@
       box-shadow:var(--shadow);
     }
 
+    .weekly-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:16px;
+    }
+
+    .weekly-card{
+      background:#fff;
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:16px;
+    }
+
+    .weekly-list{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .weekly-item{
+      display:grid;
+      grid-template-columns:28px 120px 1fr auto;
+      gap:12px;
+      align-items:start;
+      padding-bottom:12px;
+      border-bottom:1px solid #f1f3f5;
+    }
+
+    .weekly-item:last-child{
+      border-bottom:none;
+      padding-bottom:0;
+    }
+
+    .weekly-rank{
+      font-family:"Noto Sans KR", sans-serif;
+      font-weight:800;
+      font-size:20px;
+      color:#111827;
+      line-height:1;
+      padding-top:2px;
+    }
+
+    .weekly-thumb-link{
+      display:block;
+    }
+
+    .weekly-thumb{
+      width:120px;
+      height:68px;
+      object-fit:cover;
+      border-radius:10px;
+      display:block;
+      background:#eeeeee;
+      border:1px solid var(--line);
+    }
+
+    .weekly-info{
+      min-width:0;
+    }
+
+    .weekly-title{
+      display:block;
+      text-decoration:none;
+      color:var(--text);
+      font-size:15px;
+      font-weight:700;
+      line-height:1.45;
+      margin-bottom:6px;
+      word-break:keep-all;
+    }
+
+    .weekly-title:hover{
+      color:var(--blue);
+    }
+
+    .weekly-meta{
+      font-size:13px;
+      color:var(--sub);
+      line-height:1.45;
+    }
+
+    .weekly-value{
+      font-family:"Noto Sans KR", sans-serif;
+      font-size:20px;
+      font-weight:900;
+      color:#111827;
+      white-space:nowrap;
+      line-height:1.2;
+      padding-top:2px;
+    }
+
     .toolbar{
       display:flex;
       flex-wrap:wrap;
@@ -223,71 +336,6 @@
       background:#fff;
       font:inherit;
       color:var(--text);
-    }
-
-    .weekly-grid{
-      display:grid;
-      grid-template-columns:1fr 1fr 1fr;
-      gap:16px;
-    }
-
-    .weekly-card{
-      background:#fff;
-      border-radius:18px;
-      box-shadow:var(--shadow);
-      padding:16px;
-    }
-
-    .weekly-list{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-
-    .weekly-item{
-      display:flex;
-      gap:10px;
-      align-items:flex-start;
-      padding-bottom:10px;
-      border-bottom:1px solid #f1f3f5;
-    }
-
-    .weekly-item:last-child{
-      border-bottom:none;
-      padding-bottom:0;
-    }
-
-    .weekly-rank{
-      width:22px;
-      flex-shrink:0;
-      font-family:"Noto Sans KR", sans-serif;
-      font-weight:800;
-      color:#111827;
-    }
-
-    .weekly-info{
-      min-width:0;
-      flex:1;
-    }
-
-    .weekly-title{
-      display:block;
-      text-decoration:none;
-      color:var(--text);
-      font-size:14px;
-      font-weight:600;
-      line-height:1.45;
-      margin-bottom:4px;
-    }
-
-    .weekly-title:hover{
-      color:var(--blue);
-    }
-
-    .weekly-meta{
-      font-size:12px;
-      color:var(--sub);
-      line-height:1.4;
     }
 
     .table-wrap{
@@ -428,6 +476,15 @@
       .summary-grid{
         grid-template-columns:1fr;
       }
+
+      .weekly-item{
+        grid-template-columns:28px 100px 1fr;
+      }
+
+      .weekly-value{
+        grid-column:2 / 4;
+        padding-top:0;
+      }
     }
 
     @media (max-width:640px){
@@ -482,6 +539,22 @@
       .toolbar-btn{
         width:100%;
       }
+
+      .weekly-item{
+        grid-template-columns:24px 1fr;
+      }
+
+      .weekly-thumb-link{
+        grid-column:2 / 3;
+      }
+
+      .weekly-info{
+        grid-column:2 / 3;
+      }
+
+      .weekly-value{
+        grid-column:2 / 3;
+      }
     }
   </style>
 </head>
@@ -511,7 +584,11 @@
       </div>
     </div>
 
-    <h2>최근 1주일 TOP 10</h2>
+    <div class="section-head">
+      <h2 class="section-title">최근 1주일 TOP 10</h2>
+      <div id="weeklyPeriod" class="section-period"></div>
+    </div>
+
     <div class="weekly-grid">
       <div class="weekly-card">
         <h3>조회수 TOP 10</h3>
@@ -520,10 +597,6 @@
       <div class="weekly-card">
         <h3>댓글 TOP 10</h3>
         <div id="weeklyComments" class="weekly-list"></div>
-      </div>
-      <div class="weekly-card">
-        <h3>좋아요 TOP 10</h3>
-        <div id="weeklyLikes" class="weekly-list"></div>
       </div>
     </div>
 
@@ -604,6 +677,12 @@
 
     function formatNum(num) {
       return Number(num || 0).toLocaleString("ko-KR");
+    }
+
+    function formatMonthDay(date) {
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${m}.${d}.`;
     }
 
     function getSubscriberChannels() {
@@ -687,18 +766,28 @@
       updateGroupMoreButtons(ministers, vices);
     }
 
-    function getWeeklyVideos() {
-      const now = new Date();
-      const weekAgo = new Date();
-      weekAgo.setDate(now.getDate() - 7);
+    function getWeeklyRange() {
+      const end = new Date();
+      const start = new Date();
+      start.setDate(end.getDate() - 6);
+      return { start, end };
+    }
 
+    function getWeeklyVideos() {
+      const { start, end } = getWeeklyRange();
       return dashboardData.videos.filter(v => {
         const d = new Date(v.publishedAt);
-        return d >= weekAgo && d <= now;
+        return d >= start && d <= end;
       });
     }
 
-    function renderWeeklyList(targetId, videos, metricKey) {
+    function renderWeeklyPeriod() {
+      const { start, end } = getWeeklyRange();
+      document.getElementById("weeklyPeriod").textContent =
+        `${formatMonthDay(start)} ~ ${formatMonthDay(end)} 기준`;
+    }
+
+    function renderWeeklyList(targetId, videos, metricKey, metricLabel) {
       const el = document.getElementById(targetId);
 
       if (!videos.length) {
@@ -713,19 +802,23 @@
       el.innerHTML = sorted.map((v, index) => `
         <div class="weekly-item">
           <div class="weekly-rank">${index + 1}</div>
+          <a class="weekly-thumb-link" href="${v.videoUrl}" target="_blank" rel="noopener noreferrer">
+            <img class="weekly-thumb" src="${v.thumbnail}" alt="${v.title}">
+          </a>
           <div class="weekly-info">
             <a class="weekly-title" href="${v.videoUrl}" target="_blank" rel="noopener noreferrer">${v.title}</a>
-            <div class="weekly-meta">${v.channelName} · ${v.publishedAt.slice(0, 10)} · ${metricKey === 'viewCount' ? '조회수' : metricKey === 'commentCount' ? '댓글' : '좋아요'} ${formatNum(v[metricKey])}</div>
+            <div class="weekly-meta">${v.channelName} · ${v.publishedAt.slice(0, 10)}</div>
           </div>
+          <div class="weekly-value">${metricLabel} ${formatNum(v[metricKey])}</div>
         </div>
       `).join("");
     }
 
     function renderWeeklySection() {
       const weekly = getWeeklyVideos();
-      renderWeeklyList("weeklyViews", weekly, "viewCount");
-      renderWeeklyList("weeklyComments", weekly, "commentCount");
-      renderWeeklyList("weeklyLikes", weekly, "likeCount");
+      renderWeeklyPeriod();
+      renderWeeklyList("weeklyViews", weekly, "viewCount", "조회수");
+      renderWeeklyList("weeklyComments", weekly, "commentCount", "댓글");
     }
 
     function fillMinistryFilter(videos) {
