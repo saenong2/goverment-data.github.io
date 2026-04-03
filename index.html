@@ -89,7 +89,7 @@
 
     .summary-grid{
       display:grid;
-      grid-template-columns:repeat(4, minmax(0, 1fr));
+      grid-template-columns:repeat(3, minmax(0, 1fr));
       gap:12px;
       margin-bottom:18px;
     }
@@ -99,6 +99,7 @@
       border-radius:18px;
       padding:16px 18px;
       box-shadow:var(--shadow);
+      min-height:120px;
     }
 
     .summary-label{
@@ -109,20 +110,58 @@
 
     .summary-value{
       font-family:"Noto Sans KR", sans-serif;
-      font-size:24px;
+      font-size:22px;
       font-weight:900;
       letter-spacing:-0.04em;
-      line-height:1.2;
+      line-height:1.25;
+    }
+
+    .summary-video{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+    }
+
+    .summary-video-thumb{
+      width:120px;
+      height:68px;
+      object-fit:cover;
+      border-radius:10px;
+      border:1px solid var(--line);
+      background:#eee;
+      flex-shrink:0;
+    }
+
+    .summary-video-info{
+      min-width:0;
+      flex:1;
+    }
+
+    .summary-video-title{
+      display:block;
+      color:var(--text);
+      text-decoration:none;
+      font-size:14px;
+      font-weight:700;
+      line-height:1.45;
+      margin-bottom:6px;
+      word-break:keep-all;
+    }
+
+    .summary-video-title:hover{
+      color:var(--blue);
+    }
+
+    .summary-video-meta{
+      font-size:12px;
+      color:var(--sub);
+      line-height:1.45;
     }
 
     .dual-grid{
       display:grid;
       grid-template-columns:1fr 1fr;
       gap:18px;
-    }
-
-    .group-panel{
-      background:transparent;
     }
 
     .channel-list{
@@ -544,14 +583,8 @@
         grid-template-columns:24px 1fr;
       }
 
-      .weekly-thumb-link{
-        grid-column:2 / 3;
-      }
-
-      .weekly-info{
-        grid-column:2 / 3;
-      }
-
+      .weekly-thumb-link,
+      .weekly-info,
       .weekly-value{
         grid-column:2 / 3;
       }
@@ -563,11 +596,11 @@
     <h1>정부 유튜브 현황</h1>
     <div id="updated" class="updated">불러오는 중...</div>
 
-    <h2>구독자 비교</h2>
+    <h2>대시보드</h2>
     <div id="summary" class="summary-grid"></div>
 
     <div class="dual-grid">
-      <div class="group-panel">
+      <div>
         <h3>장관급 채널 TOP 5</h3>
         <div id="ministerList" class="channel-list"></div>
         <div class="mini-more-wrap">
@@ -575,7 +608,7 @@
         </div>
       </div>
 
-      <div class="group-panel">
+      <div>
         <h3>차관급 채널 TOP 5</h3>
         <div id="viceList" class="channel-list"></div>
         <div class="mini-more-wrap">
@@ -610,7 +643,7 @@
         <option value="">전체 구분</option>
         <option value="장관급">장관급</option>
         <option value="차관급">차관급</option>
-        <option value="콘텐츠전용">콘텐츠전용</option>
+        <option value="기타">기타</option>
       </select>
 
       <input type="date" id="startDate" value="2026-01-01" />
@@ -669,6 +702,8 @@
     let visibleViceCount = 5;
     const TOP_PAGE_SIZE = 5;
 
+    const excludedSpecialChannels = ["이재명", "대한민국정부"];
+
     function formatSubs(num) {
       const n = Number(num || 0);
       if (n >= 10000) return (n / 10000).toFixed(1).replace(".0", "") + "만명";
@@ -689,6 +724,22 @@
       return dashboardData.channels.filter(c => c.includeInSubscriberBoard !== false);
     }
 
+    function getWeeklyRange() {
+      const end = new Date();
+      const start = new Date();
+      start.setDate(end.getDate() - 6);
+      return { start, end };
+    }
+
+    function getWeeklyVideos() {
+      const { start, end } = getWeeklyRange();
+      return dashboardData.videos.filter(v => {
+        const d = new Date(v.publishedAt);
+        const notExcluded = !excludedSpecialChannels.includes(v.channelName);
+        return d >= start && d <= end && notExcluded;
+      });
+    }
+
     function renderSummary(channels) {
       const summaryEl = document.getElementById("summary");
       if (!channels.length) {
@@ -705,22 +756,64 @@
       const topMinister = ministers[0] || null;
       const topVice = vices[0] || null;
 
+      const weeklyVideos = getWeeklyVideos();
+      const weeklyTopView = weeklyVideos.length
+        ? [...weeklyVideos].sort((a, b) => Number(b.viewCount || 0) - Number(a.viewCount || 0))[0]
+        : null;
+
+      const hotVideo = dashboardData.hotVideo && !excludedSpecialChannels.includes(dashboardData.hotVideo.channelName)
+        ? dashboardData.hotVideo
+        : null;
+
       summaryEl.innerHTML = `
         <div class="summary-card">
           <div class="summary-label">총 구독자</div>
           <div class="summary-value">${formatSubs(totalSubs)}</div>
         </div>
+
         <div class="summary-card">
           <div class="summary-label">장관급 채널 1위</div>
           <div class="summary-value" style="font-family:'Pretendard', Arial, sans-serif; font-size:21px; letter-spacing:-0.02em;">${topMinister ? topMinister.name : "-"}</div>
         </div>
+
         <div class="summary-card">
           <div class="summary-label">차관급 채널 1위</div>
           <div class="summary-value" style="font-family:'Pretendard', Arial, sans-serif; font-size:21px; letter-spacing:-0.02em;">${topVice ? topVice.name : "-"}</div>
         </div>
+
         <div class="summary-card">
           <div class="summary-label">평균 구독자</div>
           <div class="summary-value">${formatSubs(avgSubs)}</div>
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-label">지난 1주일 최고 조회수 영상</div>
+          ${weeklyTopView ? `
+            <div class="summary-video">
+              <a href="${weeklyTopView.videoUrl}" target="_blank" rel="noopener noreferrer">
+                <img class="summary-video-thumb" src="${weeklyTopView.thumbnail}" alt="${weeklyTopView.title}">
+              </a>
+              <div class="summary-video-info">
+                <a class="summary-video-title" href="${weeklyTopView.videoUrl}" target="_blank" rel="noopener noreferrer">${weeklyTopView.title}</a>
+                <div class="summary-video-meta">${weeklyTopView.channelName} · 조회수 ${formatNum(weeklyTopView.viewCount)}</div>
+              </div>
+            </div>
+          ` : `<div class="summary-video-meta">데이터 없음</div>`}
+        </div>
+
+        <div class="summary-card">
+          <div class="summary-label">가장 핫한 영상</div>
+          ${hotVideo ? `
+            <div class="summary-video">
+              <a href="${hotVideo.videoUrl}" target="_blank" rel="noopener noreferrer">
+                <img class="summary-video-thumb" src="${hotVideo.thumbnail}" alt="${hotVideo.title}">
+              </a>
+              <div class="summary-video-info">
+                <a class="summary-video-title" href="${hotVideo.videoUrl}" target="_blank" rel="noopener noreferrer">${hotVideo.title}</a>
+                <div class="summary-video-meta">${hotVideo.channelName} · 전날 대비 +${formatNum(hotVideo.deltaViews)} 조회</div>
+              </div>
+            </div>
+          ` : `<div class="summary-video-meta">비교 데이터가 아직 없습니다.</div>`}
         </div>
       `;
     }
@@ -764,21 +857,6 @@
       renderChannelCards(ministers, "ministerList", visibleMinisterCount);
       renderChannelCards(vices, "viceList", visibleViceCount);
       updateGroupMoreButtons(ministers, vices);
-    }
-
-    function getWeeklyRange() {
-      const end = new Date();
-      const start = new Date();
-      start.setDate(end.getDate() - 6);
-      return { start, end };
-    }
-
-    function getWeeklyVideos() {
-      const { start, end } = getWeeklyRange();
-      return dashboardData.videos.filter(v => {
-        const d = new Date(v.publishedAt);
-        return d >= start && d <= end;
-      });
     }
 
     function renderWeeklyPeriod() {
